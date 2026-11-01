@@ -1,0 +1,747 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Seascape">
+<meta name="theme-color" content="#0b0f14">
+<title>Seascape — 503CW exposure</title>
+<style>
+  :root{
+    --bg:#0b0f14; --card:#141b23; --card2:#1b242e; --line:#28333f;
+    --ink:#eef4fa; --dim:#8da0b3; --accent:#f4a259; --cool:#5ec8c8; --warn:#e0674f;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
+    -webkit-text-size-adjust:100%}
+  body{padding:env(safe-area-inset-top) 14px calc(env(safe-area-inset-bottom) + 36px)}
+  .wrap{max-width:560px;margin:0 auto}
+  header{padding:18px 2px 8px}
+  h1{margin:0;font-size:26px;letter-spacing:-.4px}
+  header p{margin:3px 0 0;color:var(--dim);font-size:13px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin:12px 0}
+  .card h2,summary{margin:0 0 10px;font-size:12px;letter-spacing:1.4px;text-transform:uppercase;
+    color:var(--dim);font-weight:600}
+  summary{cursor:pointer;margin:0;list-style:none}
+  summary::-webkit-details-marker{display:none}
+  summary::after{content:' ▾';color:var(--line)}
+  details[open] summary{margin-bottom:12px}
+  .row{display:flex;gap:8px;flex-wrap:wrap}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  button{font:inherit;color:inherit;background:var(--card2);border:1px solid var(--line);
+    border-radius:12px;padding:12px 8px;cursor:pointer;flex:1;min-width:52px;white-space:nowrap}
+  button.on{background:var(--accent);border-color:var(--accent);color:#10141a;font-weight:650}
+  button.ghost.on{background:var(--cool);border-color:var(--cool)}
+  button small{display:block;font-size:11px;opacity:.72;font-weight:400}
+  .seg{display:flex;gap:6px;background:var(--card2);padding:4px;border-radius:14px;border:1px solid var(--line)}
+  .seg button{background:transparent;border:0;padding:10px;border-radius:10px;min-width:0}
+  .seg button.on{background:var(--ink);color:#0b0f14}
+  label{display:block;font-size:12px;color:var(--dim);margin:0 0 5px}
+  select,input{width:100%;font:inherit;color:var(--ink);background:var(--card2);
+    border:1px solid var(--line);border-radius:12px;padding:12px 10px;appearance:none}
+  .stack{display:block;width:100%;text-align:left;margin-bottom:8px;padding:12px 14px}
+  .stack b{display:block;font-size:15.5px}
+  .stack span{display:block;font-size:12.5px;color:var(--dim);margin-top:2px}
+  .stack.on span{color:#3a2d20}
+  .answer{background:linear-gradient(170deg,#1d2a33,#141b23);border-color:#31505c}
+  .big{font-size:46px;line-height:1.05;font-weight:700;letter-spacing:-1.5px;margin:2px 0}
+  .big.small{font-size:34px}
+  .sub{color:var(--cool);font-size:15px;font-weight:600}
+  .steps{margin:14px 0 0;padding:12px;background:#10171e;border-radius:12px;font-size:13.5px;color:var(--dim)}
+  .steps div{display:flex;justify-content:space-between;gap:10px;padding:3px 0}
+  .steps div b{color:var(--ink);font-weight:600;text-align:right}
+  .note{font-size:13px;color:var(--dim);margin-top:10px}
+  .flag{margin-top:10px;padding:10px 12px;border-radius:10px;font-size:13.5px;
+    background:#2a1d18;border:1px solid #5a3426;color:#f0c3ae}
+  .flag.good{background:#16241d;border-color:#2c5a43;color:#a9e0c4}
+  .alt{font-size:13px;color:var(--dim);margin-top:10px}
+  .alt b{color:var(--ink)}
+  .clock{font-size:60px;font-weight:700;letter-spacing:-2px;font-variant-numeric:tabular-nums;margin:6px 0 10px;text-align:center}
+  .clock.run{color:var(--accent)}
+  .tl{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid #1d2630}
+  .tl:last-child{border:0}
+  .tl b{font-variant-numeric:tabular-nums}
+  .tl .hi{color:var(--cool)} .tl .lo{color:var(--accent)}
+  .tips{font-size:13.5px;color:var(--dim);padding-left:20px;margin:0}
+  .tips li{margin:7px 0} .tips b{color:var(--ink)}
+  footer{color:#54657a;font-size:12px;text-align:center;padding:18px 10px}
+  .muted{color:var(--dim);font-size:12.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Seascape</h1>
+  <p>Hasselblad 503CW · long-exposure water</p>
+</header>
+
+<details class="card" id="spotCard">
+  <summary>Spot, light and tide</summary>
+  <div class="grid2">
+    <div><label>Latitude</label><input id="lat" type="text" inputmode="decimal" value="50.2370"></div>
+    <div><label>Longitude</label><input id="lon" type="text" inputmode="decimal" value="-3.7730"></div>
+  </div>
+  <div class="row" style="margin-top:10px">
+    <button id="geoBtn">Use my location</button>
+    <button id="saveSpot">Save this spot</button>
+  </div>
+  <div style="margin-top:10px"><label>Saved spots</label><select id="spots"></select></div>
+  <div style="margin-top:10px"><label>Day</label><select id="day"></select></div>
+  <div id="sunOut" class="steps"></div>
+  <div id="tideOut" class="steps"></div>
+  <div id="windowOut"></div>
+</details>
+
+<details class="card" id="moonCard">
+  <summary>Moon and night light</summary>
+  <div id="moonOut" class="steps"></div>
+  <button id="moonLoad" style="margin-top:10px">Load this as the meter reading</button>
+  <p class="muted">A starting point only — no handheld meter reads this low, so bracket two stops
+  either side and write down which frame was which.</p>
+</details>
+
+<div class="card">
+  <h2>Film and EI</h2>
+  <div class="row" id="films"></div>
+  <div style="margin-top:10px"><label>Rate it at (EI)</label><select id="ei"></select></div>
+  <p class="muted" id="eiNote"></p>
+</div>
+
+<div class="card">
+  <h2>Meter</h2>
+  <div id="meters"></div>
+  <p class="muted" id="meterHint"></p>
+  <div class="grid2" style="margin-top:10px">
+    <div><label>Shutter</label><select id="mShutter"></select></div>
+    <div><label>Aperture</label><select id="mAperture"></select></div>
+    <div><label>Meter set to ISO</label><select id="mIso"></select></div>
+    <div><label>Shooting aperture</label><select id="sAperture"></select></div>
+  </div>
+  <div id="toneWrap" style="margin-top:12px">
+    <label>What did you read off? — it renders that mid-grey</label>
+    <select id="tone"></select>
+  </div>
+</div>
+
+<div class="card">
+  <h2>What am I solving for?</h2>
+  <div class="seg" id="mode">
+    <button data-mode="look" class="on">I want this look</button>
+    <button data-mode="time">These NDs are on</button>
+  </div>
+</div>
+
+<div class="card" id="lookCard">
+  <h2>The look I want</h2>
+  <div id="looks"></div>
+  <label style="margin-top:12px">Solid NDs in the bag — stops</label>
+  <div class="row" id="bag"></div>
+</div>
+
+<div class="card" id="timeCard" hidden>
+  <h2>Solid NDs on the lens — stops</h2>
+  <div class="row" id="onlens"></div>
+</div>
+
+<div class="card answer" id="answer"></div>
+
+<div class="card">
+  <h2>Bulb timer</h2>
+  <div class="clock" id="clock">0:00</div>
+  <div class="row">
+    <button id="startBtn">Start</button>
+    <button id="resetBtn">Reset</button>
+  </div>
+  <p class="note">Beeps and buzzes at 3, 2, 1 and close. Holds the screen awake while running.</p>
+</div>
+
+<details class="card">
+  <summary>Calibration — once, then forget it</summary>
+  <label>Measured stops of each ND (test it: meter with and without)</label>
+  <div id="calND" class="grid2"></div>
+  <label style="margin-top:12px">Meter offset, stops (+ = that meter reads dark, needs more exposure)</label>
+  <div class="grid2">
+    <div><label class="muted">Canon 7D spot</label><input id="cal7d" type="text" inputmode="decimal" value="0"></div>
+    <div><label class="muted">Sekonic L-308S</label><input id="calSek" type="text" inputmode="decimal" value="0"></div>
+  </div>
+  <p class="muted">Meter the same grey card with both in the same light. If the 7D says 1/60 and the
+  Sekonic says 1/45, the 7D is ⅓ stop optimistic — put <b>0.33</b> against the 7D.</p>
+</details>
+
+<details class="card">
+  <summary>On the beach, in order</summary>
+  <ol class="tips">
+    <li><b>Meter unfiltered.</b> Neither the 7D nor the Sekonic can read through a 10-stop — it is below both their ranges.</li>
+    <li><b>Focus and compose</b> before the ND goes on. A 10-stop is black through the finder.</li>
+    <li><b>Mirror up</b>, locking cable release, shutter ring to <b>B</b>. The leaf shutter only times to 1 s.</li>
+    <li><b>Cover the eyepiece</b> and seat the dark slide. On a six-minute frame the finder will fog the top of the neg.</li>
+    <li><b>Note the frame</b> — twelve on a roll, and you will not remember which was which at the scan.</li>
+  </ol>
+</details>
+
+<footer>
+  Reciprocity: Ilford's published T<sup>1.31</sup> for HP5+/FP4+; Kodak Gold on the consumer-colour
+  table (+1 stop at 1 s, +2 at 10 s, +3 at 100 s) — bracket a stop over.
+  Sun times computed on the device, no signal needed. Tide from Open-Meteo's model, cached for offline —
+  heights are relative to mean sea level, not chart datum, so use it for timing, not for depth.
+  <br><br>Add to Home Screen: Share → Add to Home Screen.
+</footer>
+
+</div>
+<script>
+/* ============================ reference data ============================ */
+const FILMS = {
+  hp5:  {name:'HP5 PLUS', iso:400, kind:'ilford', recip:'Ilford T^1.31', eis:[200,250,320,400],
+         note:'Black-and-white negative. Rating it under box speed buys shadow detail — 320 is the common choice.'},
+  fp4:  {name:'FP4 PLUS', iso:125, kind:'ilford', recip:'Ilford T^1.31', eis:[64,80,100,125],
+         note:'Finer grain, two stops slower than HP5 — which on a seascape is a help, not a cost.'},
+  gold: {name:'Kodak Gold', iso:200, kind:'table', eis:[100,125,160,200],
+         table:[[1,1],[10,2],[100,3]], recip:'Gold table',
+         note:'Consumer colour negative. It takes overexposure well and hates underexposure, so 100 is a safe rating — but it is the worst of these four past a few seconds.'},
+  portra:{name:'Portra 400', iso:400, kind:'table', eis:[200,250,320,400],
+          table:[[1,0.33],[10,1],[100,2]], recip:'Portra table',
+          note:'The colour film for this job. It holds reciprocity far better than Gold — a third of a stop at 1 s where Gold wants a full stop — and the overexposure latitude is enormous.'}
+};
+const METERS = {
+  incident:{name:'Sekonic L-308S', sub:'incident', tone:false, cal:'calSek',
+    hint:'Lumisphere out, stand at the water, point the dome back at the camera. No tone compensation — the dome reads the light falling on the scene, not the tone reflecting off it. This is the meter to trust.'},
+  reflected:{name:'Sekonic L-308S', sub:'reflected', tone:true, cal:'calSek',
+    hint:'Lumigrid on, roughly a 40° field. It averages whatever it sees and renders it mid-grey, so it still needs placing.'},
+  spot7d:{name:'Canon 7D', sub:'spot', tone:true, cal:'cal7d',
+    hint:'Manual, spot metering, centre point only on the 7D. Set the camera to your EI. APS-C changes nothing — f/11 is f/11 on any format.'}
+};
+const TONES = [
+  {v: 2.0,  l:'Sunlit white foam, breaking surf'},
+  {v: 1.67, l:'Bright overcast sky, white cloud'},
+  {v: 1.33, l:'Pale wet sand reflecting the sky'},
+  {v: 1.0,  l:'Light stone, dry sand, pale cliff'},
+  {v: 0,    l:'Grey card, weathered concrete, grass'},
+  {v: 0,    l:'Clear north sky, average scene'},
+  {v:-1.0,  l:'Dark wet sand, green water'},
+  {v:-1.67, l:'Wet dark rock, seaweed'},
+  {v:-2.0,  l:'Shadow you still want detail in'}
+];
+const LOOKS = {
+  texture:{t:0.5, lo:0.25,hi:1,  name:'Texture held',   desc:'Wave shape and white water still defined'},
+  silk:   {t:2,   lo:1,   hi:4,  name:'Silk and trails',desc:'Water visibly moving, foam draws lines'},
+  smooth: {t:8,   lo:4,   hi:15, name:'Smooth',         desc:'Soft, some structure left in the swell'},
+  misty:  {t:30,  lo:15,  hi:75, name:'Misty',          desc:'Surface turns to vapour — your look'},
+  glass:  {t:150, lo:75,  hi:1e9,name:'Flat glass',     desc:'All motion gone, horizon like sheet metal'}
+};
+const SHUTTERS = [4000,2000,1000,500,250,125,60,30,15,8,4,2].map(d=>({s:1/d,l:'1/'+d}))
+  .concat([1,2,4,8,15,30,60,120,240,480].map(v=>({s:v,l:v<60?v+' s':(v/60)+' min'})));
+const APERTURES = [2.8,4,5.6,8,11,16,22,32];
+const ISOS = [50,64,100,125,160,200,320,400,800];
+const STOCK_ND = [1,2,3,6,10,15];
+const PRESETS = [
+  {name:'Salcombe',   lat:50.2370, lon:-3.7730},
+  {name:'Teignmouth', lat:50.5470, lon:-3.4970}
+];
+
+const state = {
+  film:'hp5', ei:400, meter:'spot7d', toneIdx:4,
+  mShutter:1/15, mAperture:11, mIso:400, sAperture:11,
+  mode:'look', look:'misty',
+  bag:{1:false,2:false,3:true,6:true,10:true,15:false},
+  onlens:{1:false,2:false,3:false,6:false,10:true,15:false},
+  ndReal:{1:1,2:2,3:3,6:6,10:10,15:15},
+  cal:{cal7d:0, calSek:0},
+  lat:50.2370, lon:-3.7730, dayOffset:0, spots:[], seconds:0, tide:null
+};
+
+/* ============================ exposure maths ============================ */
+function tableStops(t, table){
+  // published points are stops-to-add at 1, 10, 100 s; interpolate (and extend) in log time
+  const x = Math.log10(t);
+  const pts = table.map(([s, st]) => [Math.log10(s), st]);
+  if (x <= pts[0][0]) return pts[0][1];
+  for (let i = 0; i < pts.length - 1; i++){
+    const [x0,y0] = pts[i], [x1,y1] = pts[i+1];
+    if (x <= x1) return y0 + (y1 - y0) * (x - x0) / (x1 - x0);
+  }
+  const [x0,y0] = pts[pts.length-2], [x1,y1] = pts[pts.length-1];
+  return y1 + (y1 - y0) * (x - x1) / (x1 - x0);       // hold the last slope past the table
+}
+function reciprocity(t, f){
+  if (t < 1) return t;
+  if (f.kind === 'ilford') return Math.pow(t, 1.31);
+  return t * Math.pow(2, tableStops(t, f.table));
+}
+function invReciprocity(T, f){
+  if (T < 1) return T;
+  if (f.kind === 'ilford') return Math.pow(T, 1/1.31);
+  let lo = 1, hi = 2;
+  while (reciprocity(hi, f) < T) hi *= 2;
+  for (let i = 0; i < 80; i++){
+    const m = (lo + hi) / 2;
+    if (reciprocity(m, f) < T) lo = m; else hi = m;
+  }
+  return (lo + hi) / 2;
+}
+function compensation(){
+  const m = METERS[state.meter];
+  return (m.tone ? TONES[state.toneIdx].v : 0) + (state.cal[m.cal] || 0);
+}
+function baseMetered(){
+  return state.mShutter
+       * Math.pow(state.sAperture / state.mAperture, 2)   // aperture difference
+       * (state.mIso / state.ei)                          // meter ISO vs how you rate the film
+       * Math.pow(2, compensation());                     // tone placement + meter offset
+}
+function combos(set){
+  const have = STOCK_ND.filter(n => set[n]);
+  const out = [{stops:0, label:'no ND'}];
+  have.forEach(a => out.push({stops:state.ndReal[a], label:a + '-stop'}));
+  for (let i=0;i<have.length;i++) for (let j=i+1;j<have.length;j++)
+    out.push({stops:state.ndReal[have[i]]+state.ndReal[have[j]], label:have[i]+' + '+have[j]+' stacked'});
+  return out.sort((a,b)=>a.stops-b.stops);
+}
+function classify(T){
+  for (const k in LOOKS) if (T >= LOOKS[k].lo && T < LOOKS[k].hi) return k;
+  return T < 0.25 ? 'texture' : 'glass';
+}
+function fmt(T){
+  if (T < 1){
+    const d = [2,4,8,15,30,60,125,250,500,1000,2000,4000]
+      .reduce((p,c)=>Math.abs(1/c-T)<Math.abs(1/p-T)?c:p);
+    return '1/' + d + ' s';
+  }
+  if (T < 60) return (T < 10 ? T.toFixed(1).replace(/\.0$/,'') : Math.round(T)) + ' s';
+  const m = Math.floor(T/60), s = Math.round(T-m*60);
+  return m + ' m ' + String(s).padStart(2,'0') + ' s';
+}
+function solve(){
+  const f = FILMS[state.film], base = baseMetered();
+  let chosen, alternatives = [];
+  if (state.mode === 'look'){
+    const list = combos(state.bag).map(c => {
+      const metered = base * Math.pow(2, c.stops);
+      const real = reciprocity(metered, f);
+      // rank on the time actually achieved — reciprocity magnifies an overshoot
+      return {...c, metered, real, miss: Math.abs(Math.log2(real / LOOKS[state.look].t))};
+    }).sort((a,b)=>a.miss-b.miss);
+    chosen = list[0];
+    alternatives = list.slice(1,3).sort((a,b)=>a.stops-b.stops);
+  } else {
+    const on = STOCK_ND.filter(n => state.onlens[n]);
+    const total = on.reduce((a,b)=>a+state.ndReal[b],0);
+    const metered = base * Math.pow(2, total);
+    chosen = {stops:total, label: on.length ? on.join(' + ') + '-stop' : 'no ND',
+              metered, real: reciprocity(metered, f), miss:0};
+  }
+  return {f, base, chosen, alternatives};
+}
+
+/* ============================ sun ============================ */
+const rad = Math.PI/180;
+const toJulian = d => d.valueOf()/86400000 + 2440587.5;
+const fromJulian = j => new Date((j - 2440587.5) * 86400000);
+
+function solarBase(n){
+  const M = (357.5291 + 0.98560028 * n) % 360;
+  const C = 1.9148*Math.sin(M*rad) + 0.0200*Math.sin(2*M*rad) + 0.0003*Math.sin(3*M*rad);
+  const lam = (M + C + 180 + 102.9372) % 360;
+  const dec = Math.asin(Math.sin(lam*rad) * Math.sin(23.4397*rad));
+  return {M, lam, dec};
+}
+function sunEvent(date, lat, lon, altDeg, rising){
+  const J = toJulian(date);
+  const n = Math.round(J - 2451545.0 + 0.0008 - lon/360);
+  const Jstar = n - lon/360;
+  const {M, lam, dec} = solarBase(Jstar);
+  const Jtransit = 2451545.0 + Jstar + 0.0053*Math.sin(M*rad) - 0.0069*Math.sin(2*lam*rad);
+  const cosW = (Math.sin(altDeg*rad) - Math.sin(lat*rad)*Math.sin(dec)) /
+               (Math.cos(lat*rad)*Math.cos(dec));
+  if (cosW > 1 || cosW < -1) return null;           // sun never reaches that altitude today
+  const w = Math.acos(cosW) / rad;
+  return fromJulian(Jtransit + (rising ? -w : w)/360);
+}
+function sunAltitude(date, lat, lon){
+  const n = toJulian(date) - 2451545.0;
+  const {lam, dec} = solarBase(n);
+  const eps = 23.4397*rad;
+  const ra = Math.atan2(Math.sin(lam*rad)*Math.cos(eps), Math.cos(lam*rad));
+  const theta = (280.16 + 360.9856235*n)*rad + lon*rad;
+  const H = theta - ra;
+  return Math.asin(Math.sin(lat*rad)*Math.sin(dec) + Math.cos(lat*rad)*Math.cos(dec)*Math.cos(H)) / rad;
+}
+const hhmm = d => d ? d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', hour12:false}) : '—';
+
+function targetDate(){
+  const d = new Date(); d.setHours(12,0,0,0); d.setDate(d.getDate() + state.dayOffset); return d;
+}
+function renderSun(){
+  const d = targetDate(), la = state.lat, lo = state.lon;
+  const ev = {
+    dawn:    sunEvent(d, la, lo, -6, true),
+    sunrise: sunEvent(d, la, lo, -0.833, true),
+    goldAm:  sunEvent(d, la, lo, 6, true),
+    goldPm:  sunEvent(d, la, lo, 6, false),
+    sunset:  sunEvent(d, la, lo, -0.833, false),
+    dusk:    sunEvent(d, la, lo, -6, false)
+  };
+  $('sunOut').innerHTML = `
+    <div><span>First light → sunrise</span><b>${hhmm(ev.dawn)} → ${hhmm(ev.sunrise)}</b></div>
+    <div><span>Morning golden hour</span><b>${hhmm(ev.sunrise)} – ${hhmm(ev.goldAm)}</b></div>
+    <div><span>Evening golden hour</span><b>${hhmm(ev.goldPm)} – ${hhmm(ev.sunset)}</b></div>
+    <div><span>Sunset → last light</span><b>${hhmm(ev.sunset)} → ${hhmm(ev.dusk)}</b></div>
+    <div><span>Sun right now</span><b>${sunAltitude(new Date(), la, lo).toFixed(1)}°</b></div>`;
+  return ev;
+}
+
+/* ============================ moon ============================ */
+const eps = 23.4397 * rad;
+const toDays = date => toJulian(date) - 2451545.0;
+
+function sunEquatorial(d){
+  const M = rad * (357.5291 + 0.98560028 * d);
+  const C = rad * (1.9148*Math.sin(M) + 0.0200*Math.sin(2*M) + 0.0003*Math.sin(3*M));
+  const L = M + C + rad*102.9372 + Math.PI;
+  return {dec: Math.asin(Math.sin(eps)*Math.sin(L)),
+          ra: Math.atan2(Math.sin(L)*Math.cos(eps), Math.cos(L))};
+}
+function moonCoords(d){
+  const L = rad * (218.316 + 13.176396*d),      // mean longitude
+        M = rad * (134.963 + 13.064993*d),      // mean anomaly
+        F = rad * (93.272 + 13.229350*d);       // argument of latitude
+  const l = L + rad*6.289*Math.sin(M),
+        b = rad*5.128*Math.sin(F),
+        dist = 385001 - 20905*Math.cos(M);
+  return {ra: Math.atan2(Math.sin(l)*Math.cos(eps) - Math.tan(b)*Math.sin(eps), Math.cos(l)),
+          dec: Math.asin(Math.sin(b)*Math.cos(eps) + Math.cos(b)*Math.sin(eps)*Math.sin(l)),
+          dist};
+}
+function moonIllumination(date){
+  const d = toDays(date), s = sunEquatorial(d), m = moonCoords(d), sdist = 149598000;
+  const phi = Math.acos(Math.sin(s.dec)*Math.sin(m.dec) +
+                        Math.cos(s.dec)*Math.cos(m.dec)*Math.cos(s.ra - m.ra));
+  const inc = Math.atan2(sdist*Math.sin(phi), m.dist - sdist*Math.cos(phi));
+  const angle = Math.atan2(Math.cos(s.dec)*Math.sin(s.ra - m.ra),
+                           Math.sin(s.dec)*Math.cos(m.dec) - Math.cos(s.dec)*Math.sin(m.dec)*Math.cos(s.ra - m.ra));
+  return {fraction: (1 + Math.cos(inc))/2, phase: 0.5 + 0.5*inc*(angle < 0 ? -1 : 1)/Math.PI};
+}
+function moonAltitude(date, lat, lon){
+  const d = toDays(date), c = moonCoords(d);
+  const H = rad*(280.16 + 360.9856235*d) + rad*lon - c.ra;
+  const h = Math.asin(Math.sin(lat*rad)*Math.sin(c.dec) + Math.cos(lat*rad)*Math.cos(c.dec)*Math.cos(H));
+  return (h + rad*0.017/Math.tan(h + rad*10.26/(h + rad*5.10))) / rad;   // + refraction
+}
+function moonTimes(date, lat, lon){
+  const start = new Date(date); start.setHours(0,0,0,0);
+  let rise = null, set = null, prev = moonAltitude(start, lat, lon), prevT = start, peak = prev;
+  for (let i = 10; i <= 1440; i += 10){
+    const t = new Date(start.getTime() + i*60000), h = moonAltitude(t, lat, lon);
+    if (h > peak) peak = h;
+    const cross = f => new Date(prevT.getTime() + (t - prevT) * (0 - prev)/(h - prev));
+    if (prev < 0 && h >= 0 && !rise) rise = cross();
+    if (prev >= 0 && h < 0 && !set) set = cross();
+    prev = h; prevT = t;
+  }
+  return {rise, set, peak};
+}
+const PHASES = [
+  [0.033,'New moon'], [0.216,'Waxing crescent'], [0.283,'First quarter'], [0.466,'Waxing gibbous'],
+  [0.533,'Full moon'], [0.716,'Waning gibbous'], [0.783,'Last quarter'], [0.966,'Waning crescent'],
+  [1.001,'New moon']
+];
+const phaseName = p => PHASES.find(([lim]) => p < lim)[1];
+// landscape light: full moon anchors at EV100 -3; brightness falls much faster than lit area
+// (opposition surge), so scale as fraction^2.5
+const moonEV100 = f => f < 0.02 ? null : -3 + 2.5*Math.log2(f);
+
+function renderMoon(){
+  const d = targetDate(), la = state.lat, lo = state.lon;
+  const ill = moonIllumination(d), mt = moonTimes(d, la, lo);
+  const pct = Math.round(ill.fraction*100), ev = moonEV100(ill.fraction);
+  const night = ev === null
+    ? 'No moonlight at all. Starlight only — the water will record as black unless you have town glow to work with.'
+    : `Roughly EV ${ev.toFixed(1)} at ISO 100 on the landscape${mt.peak < 20 ? ', and it never gets far above the horizon today, so call it a stop less again' : ''}.`;
+  state.moonEV = (mt.peak < 20 && ev !== null) ? ev - 1 : ev;
+  $('moonOut').innerHTML = `
+    <div><span>Phase</span><b>${phaseName(ill.phase)} · ${pct}% lit</b></div>
+    <div><span>Moonrise / moonset</span><b>${hhmm(mt.rise)} / ${hhmm(mt.set)}</b></div>
+    <div><span>Highest it gets</span><b>${mt.peak.toFixed(0)}°</b></div>
+    <div style="display:block;padding-top:8px;color:var(--dim)">${night}</div>`;
+  $('moonLoad').hidden = ev === null;
+}
+
+/* ============================ tide ============================ */
+async function loadTide(){
+  const key = `tide:${state.lat.toFixed(2)},${state.lon.toFixed(2)}`;
+  let cached = null;
+  try { cached = JSON.parse(localStorage.getItem(key) || 'null'); } catch(e){}
+  const fresh = cached && (Date.now() - cached.at < 6*3600*1000);
+  if (!fresh){
+    try {
+      const url = `https://marine-api.open-meteo.com/v1/marine?latitude=${state.lat}&longitude=${state.lon}`
+                + `&hourly=sea_level_height_msl&timezone=auto&forecast_days=7`;
+      const r = await fetch(url);
+      if (!r.ok) throw new Error(r.status);
+      const j = await r.json();
+      if (!j.hourly || !j.hourly.time) throw new Error('no data');
+      cached = {at: Date.now(), hourly: j.hourly};
+      localStorage.setItem(key, JSON.stringify(cached));
+    } catch(e){ /* fall through to whatever cache we have */ }
+  }
+  state.tide = cached;
+  renderTide();
+}
+function extrema(times, vals){
+  const out = [];
+  for (let i = 1; i < vals.length - 1; i++){
+    const a = vals[i-1], b = vals[i], c = vals[i+1];
+    if (a == null || b == null || c == null) continue;
+    const isHigh = b >= a && b >= c, isLow = b <= a && b <= c;
+    if (!isHigh && !isLow) continue;
+    const denom = a - 2*b + c;
+    const shift = denom === 0 ? 0 : 0.5 * (a - c) / denom;   // quadratic refinement, in hours
+    const t = new Date(times[i]);
+    t.setMinutes(t.getMinutes() + Math.round(shift * 60));
+    out.push({when:t, kind:isHigh?'High':'Low', h: b - (a-c)*shift/4});
+  }
+  return out;
+}
+function renderTide(){
+  if (!state.tide){
+    $('tideOut').innerHTML = '<div><span>Tide</span><b>No data yet — needs signal once</b></div>';
+    return;
+  }
+  const {time, sea_level_height_msl:v} = state.tide.hourly;
+  const day = targetDate().toDateString();
+  const all = extrema(time, v);
+  const today = all.filter(e => e.when.toDateString() === day);
+  const age = Math.round((Date.now() - state.tide.at)/60000);
+  $('tideOut').innerHTML =
+    (today.length
+      ? today.map(e => `<div class="tl"><span class="${e.kind==='High'?'hi':'lo'}">${e.kind} water</span>`
+          + `<b>${hhmm(e.when)} &nbsp; ${e.h>=0?'+':''}${e.h.toFixed(2)} m</b></div>`).join('')
+      : '<div><span>Tide</span><b>Outside the forecast window</b></div>')
+    + `<div style="padding-top:8px" class="muted">Model sea level vs MSL · ${age < 60 ? age+' min' : Math.round(age/60)+' h'} old${navigator.onLine?'':' · offline'}</div>`;
+  state.tideToday = today;
+  renderWindow(renderSun());        // tide arrives after first paint — refresh the overlap panel
+}
+function renderWindow(ev){
+  if (!state.tideToday || !state.tideToday.length || !ev.sunset){ $('windowOut').innerHTML = ''; return; }
+  const lows = state.tideToday.filter(e => e.kind === 'Low');
+  const near = (a,b) => Math.abs(a-b) < 2.5*3600*1000;
+  const hit = lows.find(l => near(l.when, ev.sunset) || near(l.when, ev.sunrise));
+  $('windowOut').innerHTML = hit
+    ? `<div class="flag good">Low water ${hhmm(hit.when)} sits inside the ${near(hit.when, ev.sunset)?'evening':'morning'} golden hour.
+       Rock and sand uncovered, light already going — that is the frame.</div>`
+    : `<div class="note">No low water near either golden hour today. Falling tide still gives you clean
+       foreground; check the day picker for a better fit.</div>`;
+}
+
+/* ============================ render ============================ */
+const $ = id => document.getElementById(id);
+const allSpots = () => PRESETS.concat(state.spots);
+
+function renderControls(){
+  $('films').innerHTML = Object.entries(FILMS).map(([k,v]) =>
+    `<button data-film="${k}" class="${state.film===k?'on':''}">${v.name}<small>ISO ${v.iso}</small></button>`).join('');
+  $('eiNote').textContent = FILMS[state.film].note;
+  $('ei').innerHTML = FILMS[state.film].eis.map(e =>
+    `<option value="${e}" ${e===state.ei?'selected':''}>EI ${e}${e===FILMS[state.film].iso?' — box speed':
+      ' — '+(Math.log2(FILMS[state.film].iso/e)).toFixed(1).replace(/\.0$/,'')+' stop more exposure'}</option>`).join('');
+  $('meters').innerHTML = Object.entries(METERS).map(([k,v]) =>
+    `<button class="stack ${state.meter===k?'on':''}" data-meter="${k}"><b>${v.name} — ${v.sub}</b></button>`).join('');
+  $('meterHint').textContent = METERS[state.meter].hint;
+  $('toneWrap').hidden = !METERS[state.meter].tone;
+  $('tone').innerHTML = TONES.map((t,i) =>
+    `<option value="${i}" ${i===state.toneIdx?'selected':''}>${t.l} — ${t.v>0?'+':''}${t.v===0?'no change':t.v.toFixed(2).replace(/\.?0+$/,'')+' stops'}</option>`).join('');
+  $('looks').innerHTML = Object.entries(LOOKS).map(([k,v]) =>
+    `<button class="stack ${state.look===k?'on':''}" data-look="${k}"><b>${v.name} · ${fmt(v.t)}</b><span>${v.desc}</span></button>`).join('');
+  $('bag').innerHTML = STOCK_ND.map(n =>
+    `<button class="ghost ${state.bag[n]?'on':''}" data-bag="${n}">${n}</button>`).join('');
+  $('onlens').innerHTML = STOCK_ND.map(n =>
+    `<button class="ghost ${state.onlens[n]?'on':''}" data-lens="${n}">${n}</button>`).join('');
+  $('calND').innerHTML = STOCK_ND.map(n =>
+    `<div><label class="muted">${n}-stop reads as</label><input data-cal="${n}" type="text" inputmode="decimal" value="${state.ndReal[n]}"></div>`).join('');
+}
+function fillSelects(){
+  $('mShutter').innerHTML = SHUTTERS.map(s=>`<option value="${s.s}" ${Math.abs(s.s-state.mShutter)<1e-9?'selected':''}>${s.l}</option>`).join('');
+  $('mAperture').innerHTML = APERTURES.map(a=>`<option value="${a}" ${a===state.mAperture?'selected':''}>f/${a}</option>`).join('');
+  $('sAperture').innerHTML = APERTURES.map(a=>`<option value="${a}" ${a===state.sAperture?'selected':''}>f/${a}</option>`).join('');
+  $('mIso').innerHTML = ISOS.map(i=>`<option value="${i}" ${i===state.mIso?'selected':''}>${i}</option>`).join('');
+  $('day').innerHTML = Array.from({length:7}, (_,i) => {
+    const d = new Date(); d.setDate(d.getDate()+i);
+    return `<option value="${i}" ${i===state.dayOffset?'selected':''}>${i===0?'Today':d.toLocaleDateString([], {weekday:'long', day:'numeric', month:'short'})}</option>`;
+  }).join('');
+  const all = allSpots();
+  const hit = all.findIndex(s => Math.abs(s.lat-state.lat)<1e-4 && Math.abs(s.lon-state.lon)<1e-4);
+  $('spots').innerHTML = '<option value="">—</option>' +
+    all.map((s,i)=>`<option value="${i}" ${i===hit?'selected':''}>${s.name}${i<PRESETS.length?'':' ★'}</option>`).join('');
+}
+function renderAnswer(){
+  const {f, base, chosen, alternatives} = solve();
+  const T = chosen.real, band = LOOKS[classify(T)];
+  const bulb = chosen.metered >= 1, comp = compensation();
+  const m = METERS[state.meter];
+
+  let flags = '';
+  if (state.mode === 'look' && chosen.miss > 0.8){
+    const over = T > LOOKS[state.look].t;
+    flags += `<div class="flag">Nothing in the bag lands it exactly — this is ${chosen.miss.toFixed(1)} stops ${over?'past':'short of'} ${LOOKS[state.look].name.toLowerCase()}.
+      ${over ? `Open to f/${APERTURES[Math.max(0, APERTURES.indexOf(state.sAperture)-1)]} or drop a filter.`
+             : `Close down, wait for the light to drop, or add another stop of ND.`}</div>`;
+  }
+  if (!bulb) flags += `<div class="flag">Under a second — use the leaf shutter at ${fmt(chosen.metered)}, not B. No reciprocity correction applies.</div>`;
+  if (state.film === 'gold' && T > 10) flags += `<div class="flag">Gold past 10 s shifts warm and crosses in the shadows. Bracket a frame a stop over and expect to correct colour at the scan. Portra would cost you ${(tableStops(chosen.metered, FILMS.gold.table) - tableStops(chosen.metered, FILMS.portra.table)).toFixed(1)} stops less here.</div>`;
+  if (state.film === 'portra' && T > 120) flags += `<div class="flag">Past two minutes even Portra drifts cool in the shadows. One frame a third over covers it.</div>`;
+  if (chosen.stops >= 13 && f.kind === 'ilford') flags += `<div class="flag">Stacked past 13 stops — cheap NDs leak infrared, which fogs HP5 and FP4 and thins your shadows. One good filter beats two indifferent ones.</div>`;
+  if (T > 480) flags += `<div class="flag">Over eight minutes. Watch the tide line and cover the eyepiece.</div>`;
+  if (state.moonClamped) flags += `<div class="flag">Moonlight estimate: even wide open this wants ${fmt(state.moonClamped)} before reciprocity, past what the picker holds. Open up further, raise the EI, or accept it is too dark tonight.</div>`;
+
+  $('answer').innerHTML = `
+    <h2>${bulb ? 'Hold B open for' : 'Set the shutter to'}</h2>
+    <div class="big ${T>=600?'small':''}">${fmt(T)}</div>
+    <div class="sub">${band.name} · ${chosen.label} · f/${state.sAperture} · ${f.name} at EI ${state.ei}</div>
+    <div class="steps">
+      <div><span>${m.name} ${m.sub}</span><b>${fmt(state.mShutter)} at f/${state.mAperture}, ISO ${state.mIso}</b></div>
+      ${comp ? `<div><span>${m.tone && TONES[state.toneIdx].v ? 'Tone placement' : 'Meter offset'}</span><b>${comp>0?'+':''}${comp.toFixed(2).replace(/\.?0+$/,'')} stops</b></div>` : ''}
+      <div><span>At f/${state.sAperture}, EI ${state.ei}</span><b>${fmt(base)}</b></div>
+      <div><span>Through ${chosen.label}</span><b>${fmt(chosen.metered)}</b></div>
+      <div><span>Reciprocity (${f.recip})</span><b>×${(T/chosen.metered).toFixed(2)} → ${fmt(T)}</b></div>
+    </div>
+    ${flags}
+    ${alternatives.length ? '<div class="alt">Also in the bag: ' + alternatives.map(a =>
+      `<b>${a.label}</b> → ${fmt(a.real)} (${LOOKS[classify(a.real)].name.toLowerCase()})`).join(' · ') + '</div>' : ''}`;
+  state.seconds = Math.round(bulb ? T : 0);
+  if (!running) paintClock(state.seconds);
+}
+function renderAll(){ renderControls(); renderAnswer(); renderMoon(); renderWindow(renderSun()); }
+
+/* ============================ timer ============================ */
+let running = false, remain = 0, tick = null, wake = null, actx = null;
+function paintClock(s){
+  const m = Math.floor(s/60);
+  $('clock').textContent = m + ':' + String(s - m*60).padStart(2,'0');
+}
+function beep(freq, ms){
+  try{
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.frequency.value = freq; o.connect(g); g.connect(actx.destination);
+    g.gain.setValueAtTime(0.25, actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + ms/1000);
+    o.start(); o.stop(actx.currentTime + ms/1000);
+  }catch(e){}
+  if (navigator.vibrate) navigator.vibrate(ms);
+}
+async function lock(on){
+  try{
+    if (on && 'wakeLock' in navigator) wake = await navigator.wakeLock.request('screen');
+    else if (wake){ wake.release(); wake = null; }
+  }catch(e){}
+}
+function startStop(){
+  if (running) return stop();
+  if (!state.seconds) return;
+  remain = state.seconds; running = true; lock(true);
+  $('startBtn').textContent = 'Stop'; $('clock').classList.add('run');
+  beep(880, 90); paintClock(remain);
+  tick = setInterval(() => {
+    remain--; paintClock(Math.max(0, remain));
+    if (remain <= 3 && remain > 0) beep(880, 90);
+    if (remain <= 0){ beep(1320, 700); stop(); }
+  }, 1000);
+}
+function stop(){
+  running = false; clearInterval(tick); lock(false);
+  $('startBtn').textContent = 'Start'; $('clock').classList.remove('run');
+}
+
+/* ============================ persistence + wiring ============================ */
+function save(){
+  localStorage.setItem('seascape', JSON.stringify({
+    film:state.film, ei:state.ei, meter:state.meter, bag:state.bag, onlens:state.onlens,
+    ndReal:state.ndReal, cal:state.cal, lat:state.lat, lon:state.lon, spots:state.spots
+  }));
+}
+function restore(){
+  try{
+    const s = JSON.parse(localStorage.getItem('seascape') || 'null');
+    if (s) Object.assign(state, s);
+  }catch(e){}
+}
+
+document.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.film){ state.film = b.dataset.film; state.ei = FILMS[state.film].iso; }
+  else if (b.dataset.meter){ state.meter = b.dataset.meter; }
+  else if (b.dataset.look){ state.look = b.dataset.look; }
+  else if (b.dataset.bag){ state.bag[b.dataset.bag] = !state.bag[b.dataset.bag]; }
+  else if (b.dataset.lens){ state.onlens[b.dataset.lens] = !state.onlens[b.dataset.lens]; }
+  else if (b.dataset.mode){
+    state.mode = b.dataset.mode;
+    document.querySelectorAll('#mode button').forEach(x => x.classList.toggle('on', x === b));
+    $('lookCard').hidden = state.mode !== 'look';
+    $('timeCard').hidden = state.mode !== 'time';
+  }
+  else return;
+  renderControls(); renderAnswer(); save();
+});
+$('ei').addEventListener('change', e => { state.ei = parseFloat(e.target.value); renderAnswer(); save(); });
+$('tone').addEventListener('change', e => { state.toneIdx = parseInt(e.target.value); renderAnswer(); });
+['mShutter','mAperture','sAperture','mIso'].forEach(id => $(id).addEventListener('change', e => {
+  state[id] = parseFloat(e.target.value); state.moonClamped = null; renderAnswer();
+}));
+$('day').addEventListener('change', e => { state.dayOffset = parseInt(e.target.value); renderSun(); renderMoon(); renderTide(); });
+['lat','lon'].forEach(id => $(id).addEventListener('change', e => {
+  const v = parseFloat(e.target.value);
+  if (!isNaN(v)) { state[id] = v; save(); renderMoon(); renderWindow(renderSun()); loadTide(); }
+}));
+document.addEventListener('input', e => {
+  if (e.target.dataset.cal){
+    const v = parseFloat(e.target.value);
+    if (!isNaN(v)) { state.ndReal[e.target.dataset.cal] = v; renderAnswer(); save(); }
+  }
+  if (e.target.id === 'cal7d' || e.target.id === 'calSek'){
+    const v = parseFloat(e.target.value);
+    if (!isNaN(v)) { state.cal[e.target.id] = v; renderAnswer(); save(); }
+  }
+});
+$('geoBtn').addEventListener('click', () => {
+  if (!navigator.geolocation) return alert('This device will not give a location here. Type the latitude and longitude in instead.');
+  navigator.geolocation.getCurrentPosition(
+    p => { state.lat = +p.coords.latitude.toFixed(4); state.lon = +p.coords.longitude.toFixed(4);
+           $('lat').value = state.lat; $('lon').value = state.lon; save(); renderMoon(); renderWindow(renderSun()); loadTide(); },
+    () => alert('Location refused or unavailable. Over a file:// page iOS blocks it — type the coordinates in, or ask me to host the app.'));
+});
+$('saveSpot').addEventListener('click', () => {
+  const name = prompt('Name this spot');
+  if (!name) return;
+  state.spots.push({name, lat:state.lat, lon:state.lon}); save(); fillSelects();
+});
+$('spots').addEventListener('change', e => {
+  const s = allSpots()[parseInt(e.target.value)];
+  if (!s) return;
+  state.lat = s.lat; state.lon = s.lon; $('lat').value = s.lat; $('lon').value = s.lon;
+  save(); renderMoon(); renderWindow(renderSun()); loadTide();
+});
+$('moonLoad').addEventListener('click', () => {
+  if (state.moonEV == null) return;
+  const evFilm = state.moonEV + Math.log2(state.ei/100);     // the EV the film sees at its EI
+  // moonlight needs the lens open — f/11 would want a quarter of an hour before reciprocity
+  const ap = 4;
+  const wanted = ap*ap / Math.pow(2, evFilm);
+  const near = SHUTTERS.reduce((p,c)=>Math.abs(Math.log2(c.s/wanted))<Math.abs(Math.log2(p.s/wanted))?c:p);
+  const longest = SHUTTERS[SHUTTERS.length-1];
+  state.mShutter = near.s; state.mAperture = ap; state.sAperture = ap; state.mIso = state.ei;
+  state.moonClamped = wanted > longest.s * 1.5 ? wanted : null;
+  state.meter = 'incident';                                   // an estimate carries no tone placement
+  renderControls(); fillSelects(); renderAnswer();
+  $('moonCard').open = false;
+});
+$('startBtn').addEventListener('click', startStop);
+$('resetBtn').addEventListener('click', () => { stop(); paintClock(state.seconds); });
+
+restore(); renderControls(); fillSelects(); renderAll(); loadTide();
+</script>
+</body>
+</html>
