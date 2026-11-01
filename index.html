@@ -139,7 +139,7 @@
 <div class="card" id="lookCard">
   <h2>The look I want</h2>
   <div id="looks"></div>
-  <label style="margin-top:12px">Solid NDs in the bag — stops</label>
+  <label style="margin-top:12px">Solid NDs in the bag — stops, and the density on the filter</label>
   <div class="row" id="bag"></div>
 </div>
 
@@ -238,6 +238,7 @@ const SHUTTERS = [4000,2000,1000,500,250,125,60,30,15,8,4,2].map(d=>({s:1/d,l:'1
 const APERTURES = [2.8,4,5.6,8,11,16,22,32];
 const ISOS = [50,64,100,125,160,200,320,400,800];
 const STOCK_ND = [1,2,3,6,10,15];
+const ND_LABEL = {1:'0.3', 2:'0.6', 3:'0.9', 6:'1.8 Little', 10:'3.0 Big', 15:'4.5 Super'};
 const PRESETS = [
   {name:'Salcombe',   lat:50.2370, lon:-3.7730},
   {name:'Teignmouth', lat:50.5470, lon:-3.4970}
@@ -247,8 +248,8 @@ const state = {
   film:'hp5', ei:400, meter:'spot7d', toneIdx:4,
   mShutter:1/15, mAperture:11, mIso:400, sAperture:11,
   mode:'look', look:'misty',
-  bag:{1:false,2:false,3:true,6:true,10:true,15:false},
-  onlens:{1:false,2:false,3:false,6:false,10:true,15:false},
+  bag:{1:true,2:true,3:true,6:false,10:false,15:false},
+  onlens:{1:true,2:true,3:true,6:false,10:false,15:false},
   ndReal:{1:1,2:2,3:3,6:6,10:10,15:15},
   cal:{cal7d:0, calSek:0},
   lat:50.2370, lon:-3.7730, dayOffset:0, spots:[], seconds:0, tide:null
@@ -295,11 +296,17 @@ function baseMetered(){
 }
 function combos(set){
   const have = STOCK_ND.filter(n => set[n]);
-  const out = [{stops:0, label:'no ND'}];
-  have.forEach(a => out.push({stops:state.ndReal[a], label:a + '-stop'}));
-  for (let i=0;i<have.length;i++) for (let j=i+1;j<have.length;j++)
-    out.push({stops:state.ndReal[have[i]]+state.ndReal[have[j]], label:have[i]+' + '+have[j]+' stacked'});
-  return out.sort((a,b)=>a.stops-b.stops);
+  const out = [];
+  for (let mask = 0; mask < (1 << have.length); mask++){
+    const pick = have.filter((_, i) => mask & (1 << i));
+    out.push({
+      stops: pick.reduce((a,n) => a + state.ndReal[n], 0),
+      label: pick.length === 0 ? 'no ND'
+           : pick.length === 1 ? pick[0] + '-stop'
+           : pick.join(' + ') + ' stacked'
+    });
+  }
+  return out.sort((a,b) => a.stops - b.stops);
 }
 function classify(T){
   for (const k in LOOKS) if (T >= LOOKS[k].lo && T < LOOKS[k].hi) return k;
@@ -557,11 +564,11 @@ function renderControls(){
   $('looks').innerHTML = Object.entries(LOOKS).map(([k,v]) =>
     `<button class="stack ${state.look===k?'on':''}" data-look="${k}"><b>${v.name} · ${fmt(v.t)}</b><span>${v.desc}</span></button>`).join('');
   $('bag').innerHTML = STOCK_ND.map(n =>
-    `<button class="ghost ${state.bag[n]?'on':''}" data-bag="${n}">${n}</button>`).join('');
+    `<button class="ghost ${state.bag[n]?'on':''}" data-bag="${n}">${n}<small>${ND_LABEL[n]}</small></button>`).join('');
   $('onlens').innerHTML = STOCK_ND.map(n =>
-    `<button class="ghost ${state.onlens[n]?'on':''}" data-lens="${n}">${n}</button>`).join('');
+    `<button class="ghost ${state.onlens[n]?'on':''}" data-lens="${n}">${n}<small>${ND_LABEL[n]}</small></button>`).join('');
   $('calND').innerHTML = STOCK_ND.map(n =>
-    `<div><label class="muted">${n}-stop reads as</label><input data-cal="${n}" type="text" inputmode="decimal" value="${state.ndReal[n]}"></div>`).join('');
+    `<div><label class="muted">${ND_LABEL[n]} (${n}-stop) reads as</label><input data-cal="${n}" type="text" inputmode="decimal" value="${state.ndReal[n]}"></div>`).join('');
 }
 function fillSelects(){
   $('mShutter').innerHTML = SHUTTERS.map(s=>`<option value="${s.s}" ${Math.abs(s.s-state.mShutter)<1e-9?'selected':''}>${s.l}</option>`).join('');
@@ -593,6 +600,7 @@ function renderAnswer(){
   if (!bulb) flags += `<div class="flag">Under a second — use the leaf shutter at ${fmt(chosen.metered)}, not B. No reciprocity correction applies.</div>`;
   if (state.film === 'gold' && T > 10) flags += `<div class="flag">Gold past 10 s shifts warm and crosses in the shadows. Bracket a frame a stop over and expect to correct colour at the scan. Portra would cost you ${(tableStops(chosen.metered, FILMS.gold.table) - tableStops(chosen.metered, FILMS.portra.table)).toFixed(1)} stops less here.</div>`;
   if (state.film === 'portra' && T > 120) flags += `<div class="flag">Past two minutes even Portra drifts cool in the shadows. One frame a third over covers it.</div>`;
+  if ((chosen.label.match(/\+/g)||[]).length >= 2) flags += `<div class="flag">Three filters in the holder — check the corners on the 50 mm, and expect a slight warm cast from stacked resin. On Gold or Portra that is a scan fix; on HP5 it costs you nothing.</div>`;
   if (chosen.stops >= 13 && f.kind === 'ilford') flags += `<div class="flag">Stacked past 13 stops — cheap NDs leak infrared, which fogs HP5 and FP4 and thins your shadows. One good filter beats two indifferent ones.</div>`;
   if (T > 480) flags += `<div class="flag">Over eight minutes. Watch the tide line and cover the eyepiece.</div>`;
   if (state.moonClamped) flags += `<div class="flag">Moonlight estimate: even wide open this wants ${fmt(state.moonClamped)} before reciprocity, past what the picker holds. Open up further, raise the EI, or accept it is too dark tonight.</div>`;

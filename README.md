@@ -45,6 +45,12 @@ Pick the meter you actually used:
 There is a calibration panel for the real measured strength of each ND filter (most "10-stops" are
 not ten) and for an offset between the two meters. Set it once.
 
+## Filters
+
+Densities are shown next to the stop count, so the chips match what is written on the filter:
+0.3 = 1 stop, 0.6 = 2, 0.9 = 3, 1.8 = 6 (Lee Little Stopper), 3.0 = 10 (Big Stopper),
+4.5 = 15 (Super Stopper). It considers every combination of what you own, not just pairs.
+
 ## Accuracy
 
 - Sun times are computed on the device and agree with published values to within a minute.
