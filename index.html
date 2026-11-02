@@ -318,22 +318,32 @@ function fmt(T){
       .reduce((p,c)=>Math.abs(1/c-T)<Math.abs(1/p-T)?c:p);
     return '1/' + d + ' s';
   }
-  if (T < 60) return (T < 10 ? T.toFixed(1).replace(/\.0$/,'') : Math.round(T)) + ' s';
-  const m = Math.floor(T/60), s = Math.round(T-m*60);
-  return m + ' m ' + String(s).padStart(2,'0') + ' s';
+  if (T < 59.5) return (T < 10 ? T.toFixed(1).replace(/\.0$/,'') : Math.round(T)) + ' s';
+  const total = Math.round(T);
+  const h = Math.floor(total/3600), m = Math.floor((total%3600)/60), sec = total%60;
+  if (h) return h + ' h ' + String(m).padStart(2,'0') + ' m';
+  return m + ' m ' + String(sec).padStart(2,'0') + ' s';
 }
 function solve(){
   const f = FILMS[state.film], base = baseMetered();
   let chosen, alternatives = [];
   if (state.mode === 'look'){
-    const list = combos(state.bag).map(c => {
+    const want = LOOKS[state.look];
+    const all = combos(state.bag).map(c => {
       const metered = base * Math.pow(2, c.stops);
       const real = reciprocity(metered, f);
       // rank on the time actually achieved — reciprocity magnifies an overshoot
-      return {...c, metered, real, miss: Math.abs(Math.log2(real / LOOKS[state.look].t))};
-    }).sort((a,b)=>a.miss-b.miss);
+      return {...c, metered, real, miss: Math.abs(Math.log2(real / want.t))};
+    });
+    // Recommending no filter when the plain reading is already far short of the look is never
+    // useful advice, and it let a bigger ND report a shorter time than a smaller one.
+    const usable = all.filter(c => c.stops > 0 || reciprocity(base, f) >= want.lo);
+    const pool = usable.length ? usable : all;
+    const inBand = pool.filter(c => c.real >= want.lo && c.real < want.hi);
+    const list = (inBand.length ? inBand : pool).sort((a,b)=>a.miss-b.miss);
     chosen = list[0];
-    alternatives = list.slice(1,3).sort((a,b)=>a.stops-b.stops);
+    alternatives = pool.filter(c => c !== chosen).sort((a,b)=>a.miss-b.miss)
+                       .slice(0,3).sort((a,b)=>a.stops-b.stops);
   } else {
     const on = STOCK_ND.filter(n => state.onlens[n]);
     const total = on.reduce((a,b)=>a+state.ndReal[b],0);
@@ -603,6 +613,7 @@ function renderAnswer(){
   if ((chosen.label.match(/\+/g)||[]).length >= 2) flags += `<div class="flag">Three filters in the holder — check the corners on the 50 mm, and expect a slight warm cast from stacked resin. On Gold or Portra that is a scan fix; on HP5 it costs you nothing.</div>`;
   if (chosen.stops >= 13 && f.kind === 'ilford') flags += `<div class="flag">Stacked past 13 stops — cheap NDs leak infrared, which fogs HP5 and FP4 and thins your shadows. One good filter beats two indifferent ones.</div>`;
   if (T > 480) flags += `<div class="flag">Over eight minutes. Watch the tide line and cover the eyepiece.</div>`;
+  if (chosen.metered > 120) flags += `<div class="flag">Metered ${fmt(chosen.metered)} is past the longest exposure ${f.kind==='ilford'?'Ilford':'Kodak'} publish data for, so this figure is the curve extrapolated, not measured. Treat it as an order of magnitude: shoot it, bracket hard, and write down what worked.</div>`;
   if (state.moonClamped) flags += `<div class="flag">Moonlight estimate: even wide open this wants ${fmt(state.moonClamped)} before reciprocity, past what the picker holds. Open up further, raise the EI, or accept it is too dark tonight.</div>`;
 
   $('answer').innerHTML = `
