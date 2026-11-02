@@ -47,6 +47,11 @@
   .stack b{display:block;font-size:15.5px}
   .stack span{display:block;font-size:12.5px;color:var(--dim);margin-top:2px}
   .stack.on span{color:#3a2d20}
+  .stack .band{font-weight:400;color:var(--dim);font-size:13px}
+  .stack.on .band{color:#4a3a28}
+  .stack .res{display:block;font-size:12.5px;margin-top:5px;color:var(--cool);font-weight:600}
+  .stack.miss .res{color:#7b8c9e;font-weight:400}
+  .stack.on .res,.stack.on.miss .res{color:#2d2318}
   .answer{background:linear-gradient(170deg,#1d2a33,#141b23);border-color:#31505c}
   .big{font-size:46px;line-height:1.05;font-weight:700;letter-spacing:-1.5px;margin:2px 0}
   .big.small{font-size:34px}
@@ -324,11 +329,10 @@ function fmt(T){
   if (h) return h + ' h ' + String(m).padStart(2,'0') + ' m';
   return m + ' m ' + String(sec).padStart(2,'0') + ' s';
 }
-function solve(){
+function solveLook(lookKey){
   const f = FILMS[state.film], base = baseMetered();
-  let chosen, alternatives = [];
-  if (state.mode === 'look'){
-    const want = LOOKS[state.look];
+  {
+    const want = LOOKS[lookKey];
     const all = combos(state.bag).map(c => {
       const metered = base * Math.pow(2, c.stops);
       const real = reciprocity(metered, f);
@@ -341,9 +345,17 @@ function solve(){
     const pool = usable.length ? usable : all;
     const inBand = pool.filter(c => c.real >= want.lo && c.real < want.hi);
     const list = (inBand.length ? inBand : pool).sort((a,b)=>a.miss-b.miss);
-    chosen = list[0];
-    alternatives = pool.filter(c => c !== chosen).sort((a,b)=>a.miss-b.miss)
-                       .slice(0,3).sort((a,b)=>a.stops-b.stops);
+    const chosen = list[0];
+    return {f, base, chosen, inBand: inBand.length > 0,
+            alternatives: pool.filter(c => c !== chosen).sort((a,b)=>a.miss-b.miss)
+                              .slice(0,3).sort((a,b)=>a.stops-b.stops)};
+  }
+}
+function solve(){
+  const f = FILMS[state.film], base = baseMetered();
+  let chosen, alternatives = [];
+  if (state.mode === 'look'){
+    return solveLook(state.look);
   } else {
     const on = STOCK_ND.filter(n => state.onlens[n]);
     const total = on.reduce((a,b)=>a+state.ndReal[b],0);
@@ -571,8 +583,7 @@ function renderControls(){
   $('toneWrap').hidden = !METERS[state.meter].tone;
   $('tone').innerHTML = TONES.map((t,i) =>
     `<option value="${i}" ${i===state.toneIdx?'selected':''}>${t.l} — ${t.v>0?'+':''}${t.v===0?'no change':t.v.toFixed(2).replace(/\.?0+$/,'')+' stops'}</option>`).join('');
-  $('looks').innerHTML = Object.entries(LOOKS).map(([k,v]) =>
-    `<button class="stack ${state.look===k?'on':''}" data-look="${k}"><b>${v.name} · ${fmt(v.t)}</b><span>${v.desc}</span></button>`).join('');
+  renderLooks();
   $('bag').innerHTML = STOCK_ND.map(n =>
     `<button class="ghost ${state.bag[n]?'on':''}" data-bag="${n}">${n}<small>${ND_LABEL[n]}</small></button>`).join('');
   $('onlens').innerHTML = STOCK_ND.map(n =>
@@ -630,8 +641,22 @@ function renderAnswer(){
     ${flags}
     ${alternatives.length ? '<div class="alt">Also in the bag: ' + alternatives.map(a =>
       `<b>${a.label}</b> → ${fmt(a.real)} (${LOOKS[classify(a.real)].name.toLowerCase()})`).join(' · ') + '</div>' : ''}`;
+  if (state.mode === 'look') renderLooks();
   state.seconds = Math.round(bulb ? T : 0);
   if (!running) paintClock(state.seconds);
+}
+function bandLabel(v){ return v.hi > 1e8 ? 'over ' + fmt(v.lo) : fmt(v.lo) + ' – ' + fmt(v.hi); }
+function renderLooks(){
+  $('looks').innerHTML = Object.entries(LOOKS).map(([k,v]) => {
+    const r = solveLook(k);
+    const under = r.chosen.real < v.t;
+    return `<button class="stack ${state.look===k?'on':''} ${r.inBand?'':'miss'}" data-look="${k}">`
+      + `<b>${v.name} <span class="band">${bandLabel(v)}</span></b>`
+      + `<span>${v.desc}</span>`
+      + `<span class="res">${r.inBand ? '✓ ' : ''}${r.chosen.label} → ${fmt(r.chosen.real)}`
+      + `${r.inBand ? '' : ` · ${r.chosen.miss.toFixed(1)} stops ${under ? 'short' : 'over'}`}</span>`
+      + `</button>`;
+  }).join('');
 }
 function renderAll(){ renderControls(); renderAnswer(); renderMoon(); renderWindow(renderSun()); }
 
@@ -708,7 +733,9 @@ document.addEventListener('click', e => {
 $('ei').addEventListener('change', e => { state.ei = parseFloat(e.target.value); renderAnswer(); save(); });
 $('tone').addEventListener('change', e => { state.toneIdx = parseInt(e.target.value); renderAnswer(); });
 ['mShutter','mAperture','sAperture','mIso'].forEach(id => $(id).addEventListener('change', e => {
-  state[id] = parseFloat(e.target.value); state.moonClamped = null; renderAnswer();
+  const v = parseFloat(e.target.value);
+  if (!isFinite(v) || v <= 0) return;        // never let a bad value poison the whole chain
+  state[id] = v; state.moonClamped = null; renderAnswer();
 }));
 $('day').addEventListener('change', e => { state.dayOffset = parseInt(e.target.value); renderSun(); renderMoon(); renderTide(); });
 ['lat','lon'].forEach(id => $(id).addEventListener('change', e => {
